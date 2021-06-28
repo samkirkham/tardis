@@ -26,8 +26,7 @@ your own caution!
 You can install tardis as follows:
 
 ``` r
-library(devtools)
-devtools::install_github("samkirkham/tardis")
+remotes::install_github("samkirkham/tardis", build_vignettes = TRUE)
 ```
 
 ## Example

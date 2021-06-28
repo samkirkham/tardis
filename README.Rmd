@@ -29,8 +29,7 @@ This package is in-progress and currently undergoing testing. Use at your own ca
 You can install tardis as follows:
 
 ```{r eval=FALSE}
-library(devtools)
-devtools::install_github("samkirkham/tardis")
+remotes::install_github("samkirkham/tardis", build_vignettes = TRUE)
 ```
 
 ## Example
