@@ -20,7 +20,14 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 *Functions for processing AG501 EMA data and converting to EMU-compatible formats*
 
-The tardis package contains functions for two primary purposes (1) processing position-calculated and head-corrected EMA sensor data from the Carstens AG501 system, including calculating derivatives and further derived variables; (2) converting processed files to the SSFF format for use with the EMU system, as well as calculating MFCCs from WAV files and converting these to SSFF format. These functions can be used independently, although conversion to SSFF makes strong assumptions about the structure of your AG501 .txt files.
+The tardis package contains functions for
+
+1. processing position-calculated and head-corrected EMA sensor data from the Carstens AG501 system, including calculating derivatives and further derived variables
+2. converting processed files to the SSFF format for use with the EMU system
+3. calculating MFCCs from WAV files and converting these to SSFF format.
+4. wrapper functions for emuR, such as obtaining multiple trackdata objects in a single call
+
+These functions can be used independently, although conversion to SSFF makes some assumptions about the structure of your AG501 .txt files. Please check the vignettes for extensive documentation and example usage.
 
 This package is in-progress and currently undergoing testing. Use at your own caution!
 
@@ -34,7 +41,7 @@ remotes::install_github("samkirkham/tardis", build_vignettes = TRUE)
 
 ## Example
 
-To see an example of typical workflow and function usage:
+For documentation of typical workflow and example usage:
 
 ```{r eval=FALSE}
 vignette("tardis-workflow", package = "tardis")
