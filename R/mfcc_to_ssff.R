@@ -49,7 +49,6 @@ mfcc_to_ssff <- function(filepath, output_dir, ...){
 
   # add tracks to ado object
   # ...adding the whole matrix = one track with 12 fields
-  # ...could add delta + delta-delta here too and add to 'ado'
   ado <- wrassp::addTrack(ado, "mfcc", wav_melfcc, format = c("REAL32"))
   ado <- wrassp::addTrack(ado, "mfcc_d", wav_melfcc_d, format = c("REAL32"))
   ado <- wrassp::addTrack(ado, "mfcc_dd", wav_melfcc_dd, format = c("REAL32"))
