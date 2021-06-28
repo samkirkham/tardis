@@ -1,0 +1,221 @@
+---
+title: "tardis workflow example"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tardis-workflow-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>")
+```
+
+```{r setup}
+library(tardis)
+```
+
+# Directory for example files
+
+We first specify the path containing the example files for this example, which we will call `data`.
+
+```{r}
+data <- system.file("extdata", package = "tardis")
+```
+
+We can list the directories inside `data`.
+
+```{r}
+list.files(data)
+```
+
+These directories will now be explained, as the form the basis of an example directory structure for data processing.
+
+
+
+# Example directory structure and workflow
+
+An example directory structure is below. In each case, we assume that each token has a unique name and that there exist correspoding wav/txt/TextGrid files for that speaker (note: it could be another format rather than TextGrids as none of the functions here are dependent on the annotation files).
+
+```{r eval=FALSE}
+dat/sf1/...
+dat/sf2/ema_original # original ag501 .txt files (with headers)
+../../ema_corrected # ag501 files with any corrections (e.g. sensor channels NA'd)
+../../ema_processed # processed ag501 files from process_ag501
+../../ema_ssff # ssff files for each sensor from ag501_to_ssff (and optionally MFCC files for each token from mfcc_to_ssff)
+../../process_code_notes # notes and any additional pre-processing code for that speaker
+../../wav_aligned # wav files and phonemically-alined TextGrids (these could in separate directories - in this document we will only deal with the wav files)
+data/sf3/...
+```
+
+The AG501 files exported by the Carstens system are typically of the form (0001.txt, 0002.txt, etc), without any information on the speaker who produced the token. This is ok for the above directory structure, but if you plan to create an EMU database then each token in the database should ideally have a unique name. One way to do this is to add a prefix to the filenames, such as a speaker code.
+
+If you need to add a speaker code prefix to the AG501 files then you can save the following code in a file called `add_prefix.sh` (also available at: XXX). You can use the same script for each speaker, but make sure you run the process detailed below separately for each speaker. If you run it more than once then it will add the prefix more than once, so be sure about what you want to do before running this.
+
+```{r eval=FALSE}
+for filename in *.wav; do mv "$filename" "$1$filename"; done;
+for filename in *.txt; do mv "$filename" "$1$filename"; done;
+for filename in *.TextGrid; do mv "$filename" "$1$filename"; done;
+```
+
+You should then open a terminal, change directory to the files to process (e.g. `cd ~/my_data/` on Linux/MacOS) and put the `add_prefix.sh` file in the same folder. Then run `bash add_prefix.sh <prefix>` replacing `<prefix>` with whatever prefix you want to add. For example, if you want to add the prefix `sf2_` to a series of files then you should run `bash add_prefix.sh sf2_` (note that the underscore must also be specified). This will add the prefix to any wav, txt or TextGrid files in that directory. It will return an error if it cannot find files with all three extensions, but it's not a problem as the other lines will still work. I wrote it like this so we only have a single script that we can run on separate directories of .wav, .txt, .TextGrid files, or if all three file types are in the same folder.
+
+
+# Pre-processing
+
+In some cases, you might find that a particular sensor is broken or unreliable. It is highly advisable to check the Carstens diagnostics, and it is also a good idea to do some quick checks of each sensor channel across a speaker's productions in order to observe potential distortions or drift in the values over time. If you do find such issues then it is advisable to fix them first and then run the processing functions on a corrected set of the data. This is what we will cover here.
+
+You can write a simple function to do perform processing such as NA-ing bad channels. It is preferable to NA a channel rather than delete it, as it allows you to maintain the same data structure for each token, which is required by many analysis functions. These functions will typically be speaker-specific, as if there is an issue in a sensor set then it is likely to be specific to a given speaker or recording session. The below example `sf2_correct` is a function that we could use to `NA` all of the sensors corresponding to Channel 1. Note that we make sure that the column remains `as.numeric()`, which is important if you use the `ag501_to_ssff` function later on.
+
+```{r}
+# pre-processing function
+sf2_correct <- function(filename, output_dir){
+  d <- read.table(filename, header=T)
+        d$Ch1_X <- as.numeric(NA)
+        d$Ch1_Y <- as.numeric(NA)
+        d$Ch1_Z <- as.numeric(NA)
+        d$Ch1_phi <- as.numeric(NA)
+        d$Ch1_theta <- as.numeric(NA)
+        d$Ch1_RMS <- as.numeric(NA)
+        d$Ch1_Extra <- as.numeric(NA)
+  write.table(d, file = paste0(output_dir, "/", basename(filename)), row.names = FALSE)
+}
+```
+
+You can then run this function over all of the original files in the directory `ema_original` and save the new files to a directory called `ema_corrected`. The files will have the same names as the originals, so it is important to save them to a new directory to avoid over-writing your original copies. Here's how you can do this.
+
+```{r eval=FALSE}
+# get path to ema_original and ema_corrected
+ema_original <- system.file("extdata/ema_original", package = "tardis")
+ema_corrected <- system.file("extdata/ema_corrected", package = "tardis")
+
+# lapply 'sf2_correct' over list of all files and save to ema_corrected
+# ...(not run)
+lapply(
+  list.files(ema_original, pattern = "*.txt", full.names = TRUE),
+  sf2_correct,
+  output_dir = ema_corrected
+  )
+```
+
+In our case, our example data doesn't actually need any such corrections, so the above code is not run - it's just an example in case you need it. If you do have to make such corrections, but also want to be really consistent and make sure that every speaker has a `ema_corrected` folder even when no corrections are needed, then you can copy the original files from `ema_original` to `ema_corrected` as follows:
+
+```{r}
+# get path to ema_original and ema_corrected
+ema_original <- system.file("extdata/ema_original", package = "tardis")
+ema_corrected <- system.file("extdata/ema_corrected", package = "tardis")
+
+file.copy(
+  list.files(ema_original, pattern = "*.txt", full.names = TRUE),
+  ema_corrected
+  )
+```
+
+# Processing AG501 EMA files
+
+Run on a single file. Note that we use `system.file("extdata/ema_original/sf2_0005.txt", package = "tardis")` to obtain the example file from the tardis package - this can be replaced by a simple file name on your own data.
+
+```{r}
+# get path to ema_processed
+ema_processed <- system.file("extdata/ema_processed", package = "tardis")
+
+# process_ag501: run on one file
+# ...note: it will return a file with the same name, so needs to be saved to new directory
+process_ag501(
+  filename = system.file("extdata/ema_original/sf2_0005.txt", package = "tardis"),
+  sensor_array = c("TT", "TB", "TD", "LT", "UT", "UL", "LL", "U1", "B1", "B2", "B3", "LH", "RH", "NO", "PA", "U2"),
+  output_dir = ema_processed)
+```
+
+Running on multiple files
+
+```{r eval=FALSE}
+# get path to ema_original and ema_corrected and ema_processed
+ema_original <- system.file("extdata/ema_original", package = "tardis")
+ema_corrected <- system.file("extdata/ema_corrected", package = "tardis")
+ema_processed <- system.file("extdata/ema_processed", package = "tardis")
+
+# (not run)
+# list all files in the relevant directory
+files <- list.files(ema_corrected, pattern = "*.txt", full.names = TRUE)
+
+# lapply the process_ag501 function over files, with the specified arguments
+lapply(
+  files,
+  process_ag501,
+  sensor_array = c("TT", "TB", "TD", "LT", "UT", "UL", "LL", "U1", "B1", "B2", "B3", "LH", "RH", "NO", "PA", "U2"),
+  output_dir = ema_processed)
+```
+
+
+# Converting processed AG501 files to SSFF files
+
+```{r}
+# get path to ema_ssff to save files to output directory
+ema_ssff <- system.file("extdata/ema_ssff", package = "tardis")
+
+# ag501_to_ssff: run on one file
+# ...cretaes lots of files (1 per token*sensor combination), so make sure to save to a new directory!
+ag501_to_ssff(
+  filename = system.file("extdata/ema_processed/sf2_0005.txt", package = "tardis"),
+  sensor_array = c("TT", "TB", "TD", "LT", "UT", "UL", "LL"),
+  pal_filepath = system.file("extdata/ema_palate/sf2_palate.txt", package = "tardis"),
+  pal_sensor = 15,
+  output_dir = ema_ssff)
+```
+
+
+# Calculating MFCCs and exporting to SSFF files
+
+The `mfcc_to_ssff` function is actually a wrapper for the `tuneR::melfcc` function, with some added functionality. Namely, in additional to the typical MFCCs, it also obtains delta and delta-delta coefficients and converts all of these values to a SSFF file for each token, which can then be imported into an EMU database for further analysis.
+
+```{r}
+# get path to ema_ssff to save files to output directory
+ema_ssff <- system.file("extdata/ema_ssff", package = "tardis")
+
+# mfcc_to_ssff: run on one file
+mfcc_to_ssff(
+  filepath = system.file("extdata/wav/sf2_0005.wav", package = "tardis"),
+  output_dir = ema_ssff)
+```
+
+You can also pass additional options to the `tuneR::melfcc` function. For example, if you want to obtain MFCCs using settings similar to those used in HTK then you could add a series of arguments similar to those below, which would override the default settings used by `tuneR::melfcc`
+
+```{r eval=FALSE}
+mfcc_to_ssff(
+  filepath = system.file("extdata/wav/sf2_0005.wav", package = "tardis"),
+  output_dir = ema_ssff,
+  lifterexp = 22,
+  htklifter = TRUE,
+  nbands = 20,
+  maxfreq = 8000, 
+  sumpower = FALSE,
+  fbtype = "htkmel",
+  dcttype = "t3"
+  )
+```
+
+
+```{r eval=FALSE}
+# (not run)
+# get path to ema_wav directory
+ema_wav <- system.file("extdata/ema_wav", package = "tardis")
+
+# list all files in the relevant directory
+files_wav <- list.files(path = ema_wav, pattern = ".wav", full.names = TRUE)
+
+# lapply the mfcc_to_ssff function over files, with the specified arguments
+lapply(
+  files_wav,
+  mfcc_to_ssff,
+  output_dir = ema_ssff
+  )
+```
+
+
+# Creating and EMU database with EMA and MFCC data
+
+TO DO
+

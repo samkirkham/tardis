@@ -1,0 +1,25 @@
+Package: tardis
+Title: Functions for processing AG501 EMA data and converting to EMU-compatible formats
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Sam",
+           family = "Kirkham",
+           role = c("aut", "cre"),
+           email = "s.kirkham@lancaster.ac.uk")
+Description: The package contains functions for two primary purposes (1) processing position-calculated and head-corrected EMA sensor data from the Carstens AG501 system, including calculating derivatives and further derived variables; (2) converting processed files to the SSFF format for use with the EMU system, as well as calculating MFCCs from WAV files and converting these to SSFF format. These functions can be used independently, although conversion to SSFF makes strong assumptions about the structure of your AG501 .txt files.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports: 
+    ag501,
+    dplyr,
+    tidyselect,
+    tuneR,
+    utils,
+    wrassp
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr
