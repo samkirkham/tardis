@@ -35,5 +35,5 @@ devtools::install_github("samkirkham/tardis")
 To see an example of typical workflow and function usage:
 
 ``` r
-vignette("tardis::tardis-workflow")
+vignette("tardis-workflow", package = "tardis")
 ```
