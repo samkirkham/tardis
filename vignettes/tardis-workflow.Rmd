@@ -29,7 +29,7 @@ dat/sf2/ema_original # original ag501 .txt files (with headers)
 ../../ema_processed # processed ag501 files from process_ag501
 ../../ema_ssff # ssff files for each sensor from ag501_to_ssff (and optionally MFCC files for each token from mfcc_to_ssff)
 ../../process_code_notes # notes and any additional pre-processing code for that speaker
-../../wav_aligned # wav files and phonemically-alined TextGrids (these could in separate directories - in this document we will only deal with the wav files)
+../../wav_aligned # wav files and phonemically-aligned TextGrids (these could in separate directories - in this document we will only deal with the wav files)
 data/sf3/...
 ```
 
@@ -118,13 +118,17 @@ file.copy(
 
 Run on a single file. Note that we use `system.file("extdata/ema_original/sf2_0005.txt", package = "tardis")` to obtain the specific example file from the tardis package - this can be replaced by a simple file name on your own data.
 
-```{r}
+```{r eval=FALSE}
 # process_ag501: run on one file
-# ...note: it will return a file with the same name, so needs to be saved to new directory
 process_ag501(
-  filename = system.file("extdata/ema_original/sf2_0005.txt", package = "tardis"),
+  filename = "sf2_0005.txt",
   sensor_array = c("TT", "TB", "TD", "LT", "UT", "UL", "LL", "U1", "B1", "B2", "B3", "LH", "RH", "NO", "PA", "U2"),
-  output_dir = ema_processed)
+  exclude_list = c("phi", "theta", "rms", "extra", "U1", "U2", "B1", "B2", "B3", "LH", "RH", "NO", "PA", "UT"),
+  sampling_rate = 250,
+  filter_type = "low",
+  filter_order = 5,
+  filter_cutoffs = 20
+  )
 ```
 
 Running on multiple files. Here we list all files in `ema_corrected` and use `lapply` to apply the `process_ag501` function across this file list. Note that the `sensor_array` for this speaker is specified too, which is a character vector corresponding to the ordered channels in the AG501 .txt files.

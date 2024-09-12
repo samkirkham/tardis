@@ -15,6 +15,7 @@ RoxygenNote: 7.1.1
 Imports: 
     ag501,
     dplyr,
+    magrittr,
     tidyselect,
     tuneR,
     utils,

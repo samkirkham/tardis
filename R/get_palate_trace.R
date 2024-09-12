@@ -11,7 +11,7 @@
 #'
 #' @note At present, this assumes that the input is an unprocessed palate trace file, with the original column names (i.e. the file has not been processed via process_ag501). This is because process_ag501 on such files is unnecessary given that we only need to obtain X/Y/Z coordinates and do not require smoothing and derived variables for the palate trace
 get_palate_trace <- function(pal_filepath, pal_sensor){
-  p <- read.table(pal_filepath, header=T)
+  p <- utils::read.table(pal_filepath, header=T)
   pal <- list()
   attr(pal, "sampleRate") <- 250
   attr(pal, "startTime") <- 0

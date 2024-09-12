@@ -3,3 +3,4 @@
 export(ag501_to_ssff)
 export(mfcc_to_ssff)
 export(process_ag501)
+importFrom(magrittr,"%>%")

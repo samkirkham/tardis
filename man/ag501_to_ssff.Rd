@@ -4,10 +4,16 @@
 \alias{ag501_to_ssff}
 \title{ag501_to_ssff}
 \usage{
-ag501_to_ssff(filename, sensor_array, pal_filepath, pal_sensor, output_dir)
+ag501_to_ssff(
+  filename,
+  sensor_array,
+  pal_filepath,
+  pal_sensor,
+  output_directory
+)
 }
 \arguments{
-\item{filename}{file to process (Carstens AG501 .txt file, with header); assumes they have column names set by \code{\link{process_ag501}} and that the sampling rate of the EMA data is 250 Hz}
+\item{filename}{file to process (Carstens AG501 .txt file, with header); assumes they have column names set by \code{\link{process_ag501}} and that the sampling rate of the EMA data is 250 Hz. Can read from .txt file (default) or from in-memory object (see \code{read_from_file}).}
 
 \item{sensor_array}{character array of sensor names to extract}
 
@@ -15,7 +21,7 @@ ag501_to_ssff(filename, sensor_array, pal_filepath, pal_sensor, output_dir)
 
 \item{pal_sensor}{number of sensor used for palate trace in pal_filepath file}
 
-\item{output_dir}{directory to save output SSFF files for each sensor}
+\item{output_directory}{directory to save output SSFF files for each sensor}
 }
 \description{
 Converts processed AG501 file created by \code{\link{process_ag501}} to SSFF files
@@ -31,7 +37,7 @@ The wrassp library has a header size limit of 1kB, limiting the number of tracks
 #' note the subset of sensor channels in 'sensors' - not all sensors are specified here as you often don't want all channels in the EMU database
 \dontrun{
 sensors <- c("TT", "TB", "TD", "LT", "UT", "UL", "LL")
-ag501_to_ssff(filename = "sf2_0005.txt", sensor_array = sensors, pal_filepath = "sf2_palate.txt", pal_sensor = 15, output_dir = "path/to/dir")
+ag501_to_ssff(filename = "sf2_0005.txt", sensor_array = sensors, pal_filepath = "sf2_palate.txt", pal_sensor = 15, output_directory = "path/to/dir")
 }
 
 # To run on a directory of files using lapply (not run)
@@ -39,7 +45,7 @@ ag501_to_ssff(filename = "sf2_0005.txt", sensor_array = sensors, pal_filepath = 
 \dontrun{
 files <- list.files("path/to/dir", pattern = "*.txt", full.names = TRUE)
 sensors <- c("TT", "TB", "TD", "LT", "UT", "UL", "LL")
-lapply(files, ag501_to_ssff, sensor_array = sensors, pal_filepath = "sf2_palate.txt", pal_sensor = 15, output_dir = "path/to/dir")
+lapply(files, ag501_to_ssff, sensor_array = sensors, pal_filepath = "sf2_palate.txt", pal_sensor = 15, output_directory = "path/to/dir")
 }
 
 }

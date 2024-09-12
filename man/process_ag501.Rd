@@ -7,43 +7,47 @@
 process_ag501(
   filename,
   sensor_array,
-  sr = 250,
+  exclude_list = NULL,
+  sampling_rate = 250,
+  filter_type = "low",
   filter_order = 5,
   filter_cutoffs = 20,
-  output_dir
+  write_file = FALSE,
+  output_directory = NULL
 )
 }
 \arguments{
 \item{filename}{file to process (Carstens AG501 ASCII .txt file, with header)}
 
-\item{sensor_array}{character array of sensor names corresponding with the channels in the .txt file (this must contain a name for each channel and names should be in sequential order)}
+\item{sensor_array}{character array of sensor names corresponding with the channels in the .txt file (this must contain a name for each channel and names should be in sequential order). The only assumption is that this contains two channels called "LL" and "UL", which are used for calculating lip aperture.}
 
-\item{sr}{sampling rate in Hz (default=250)}
+\item{exclude_list}{Character vector. After columns are re-named according to \code{sensor_array}, any columns containing the strings passed to this argument will be left out of the signal processing steps and then appended un-modified to the returned object (default is NULL)}
 
-\item{filter_order}{Order of low-pass Butterworth smoothing filter (default=5)}
+\item{sampling_rate}{sampling rate in Hz (default=250)}
 
-\item{filter_cutoffs}{Cut-off frequency of low-pass Butterworth smoothing filter in Hz (default=20)}
+\item{filter_type}{Order of low-pass Butterworth smoothing filter (default is "low")}
 
-\item{output_dir}{directory to save output SSFF files for each sensor}
+\item{filter_order}{Order of low-pass Butterworth smoothing filter (default is 5)}
+
+\item{filter_cutoffs}{Cut-off frequency of low-pass Butterworth smoothing filter in Hz (default is 20). If \code{filter_type="pass"} then \code{filter_cutoffs} must given 2 values.}
+
+\item{write_file}{Writes object as a .txt file file to \code{output_directory} (default is FALSE, which returns the data as an in-memory object).}
+
+\item{output_directory}{Directory in which to save output file when \code{write_file=TRUE} (default is NULL). If \code{write_file=TRUE} and \code{output_directory=NULL} then the file will be written to the current directory.}
 }
 \description{
-Process Carstens AG501 .txt and write processed data to new .txt file
+Process Carstens AG501 .txt and return in-memory object
 }
 \details{
-The function takes a Carstens AG501 ASCII .txt file (with headers) and a character list of sensors corresponding to each channel in the AG501 .txt files. It then processes this file by adding user-specified column names from 'sensor_array', calculates lip aperture and various velocity measures, and saves an output file with same name to a new directory. For each sensor channel it returns the following variables for the x/y/z/phi/theta coordinates: _raw (unsmoothed), _filt (smoothed), _Vel (velocity), _VelAbs (absolute velocity), _Acc (acceleration), _AccAbs (absolute acceleration), _TVAbs (absolute tangential velocity; in xz and xyz dimensions).
+The function takes a Carstens AG501 ASCII .txt file (with headers) and a character list of sensors corresponding to each channel in the AG501 .txt files. It then processes this file by adding user-specified column names from 'sensor_array', calculates lip aperture and various velocity measures, and returns an in-memory object (default) or writes a file to disk (via \code{write_file==TRUE}). For each sensor channel it returns the following variables for the x/y/z/phi/theta coordinates: TT* (unsmoothed), _filt (smoothed), _V (velocity), _V_abs (absolute velocity), _A (acceleration), _A_abs (absolute acceleration). Also returns xz_V and xyz_V (absolute tangential velocity; in xz and xyz dimensions). There is the option to omit some columns from the above processing steps, but still retain them in the output object, which can be set using the argument \code{exclude_list}.
 }
 \examples{
 # To run on a single file
 \dontrun{
 sensors <- c("TT", "TB", "TD", "LT", "UT", "UL", "LL", "U1", "B1", "B2", "B3", "LH", "RH", "NO", "PA", "U2")
-process_ag501(filename = "sf2_0005.txt", sensor_array = sensors, output_dir = "path/to/dir")
-}
-
-# To run on a directory of files using lapply
-\dontrun{
-files <- list.files("path/to/dir", pattern = "*.txt", full.names = TRUE)
-sensors <- c("TT", "TB", "TD", "LT", "UT", "UL", "LL", "U1", "B1", "B2", "B3", "LH", "RH", "NO", "PA", "U2")
-lapply(files, process_ag501, sensor_array = sensors, output_dir = "path/to/dir")
+process_ag501(filename = "inst/extdata/ema_original/sf2_0005.txt", sensor_array = sensors, sampling_rate=250, filter_type="low", filter_order=5, filter_cutoffs=20)
+# exclude any columns from processing that containing the strings in 'exclude_list'. These will be present in the returned object, but will not be filtered or undergo any further calculations
+process_ag501(filename = "inst/extdata/ema_original/sf2_0005.txt", sensor_array = sensors, sampling_rate=250, filter_type="low", filter_order=5, filter_cutoffs=20, exclude_list =  c("U1", "U2", "B1", "B2", "B3", "LH", "RH", "NO", "PA", "UT", "phi", "theta", "rms", "extra"))
 }
 
 }
