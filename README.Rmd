@@ -31,6 +31,10 @@ These functions can be used independently, although conversion to SSFF makes som
 
 This package is in-progress and currently undergoing testing. Use at your own caution!
 
+If you use this in your work please cite:
+
+- Kirkham, Sam (2024). tardis: AG501 processing tools (v.1.0.0). Zenodo. https://doi.org/10.5281/zenodo.13752979
+
 ## Installation
 
 You can install tardis as follows:
